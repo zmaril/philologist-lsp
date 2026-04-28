@@ -8,6 +8,24 @@ A Language Server that surfaces the morphological and rhetorical structure of na
 - **Auto language detection** per paragraph via [lingua](https://github.com/pemistahl/lingua-py); spaCy models for ~24 languages auto-download on first use.
 - Runs locally. No cloud APIs after the first model downloads.
 
+## Screenshots
+
+Gender colors + case underlines + verb sigils on a German passage. Solid red is accusative, dashed orange is dative, dotted green is genitive; `□` marks regular verbs, `■` marks irregular:
+
+![Per-token morphology on a German textbook passage](docs/screenshots/morphology.png)
+
+Hover any word for the full morph card and a contextual definition. Here, the Ancient Greek word `ἄνθρωποι` is decomposed into lemma, gender (💙 masculine), number (💚 plural), and case (🟦 nominative), with the LLM-generated gloss above:
+
+![Hover popup with morph card + LLM definition](docs/screenshots/hover.png)
+
+For English text, each sentence gets a CodeLens labeling its dominant rhetorical marker — `🟢 VOCATIVE` for direct address, `🟣 INSTITUTIONAL SUBJECT` for academic prose:
+
+![Per-sentence orality CodeLenses](docs/screenshots/orality-codelens.png)
+
+Hover any word in a classified sentence for marker description, examples, alternative classifications, and confidence — combined with the per-word morph and definition:
+
+![Detailed orality + morph hover](docs/screenshots/orality-hover.png)
+
 ## Install
 
 Grab the `.vsix` from the [latest release](https://github.com/zmaril/philologist-lsp/releases/latest) and install it:
@@ -28,7 +46,7 @@ On first activation, the extension creates `~/.philologist-lsp/venv` and install
 ## Inspirations
 
 - **Visual grammar**: Barbara Avila Vissirini, *[Dieses kleine Buch ist für dich](https://barbaravissirini.com/dieses-kleine-buch)* — a graphical grammar for German as a foreign language. The case-underline + gender-color encoding mirrors hers as closely as VSCode allows.
-- **Orality framework**: Walter Ong, *[Orality and Literacy: The Technologizing of the Word](https://en.wikipedia.org/wiki/Orality_and_Literacy)* (1982). The 71-class taxonomy and the oral / literate split come from this framework.
+- **Orality framework**: Walter Ong, *[Orality and Literacy: The Technologizing of the Word](https://en.wikibooks.org/wiki/Communication_Theory/Orality_and_Literacy)* (1982). The 71-class taxonomy and the oral / literate split come from this framework.
 - **Theory background**: Eric Havelock, *[Preface to Plato](https://en.wikipedia.org/wiki/Eric_A._Havelock#Preface_to_Plato)* (1963), which the [havelock.ai](https://havelock.ai/) project is named after.
 
 ## Repo layout
