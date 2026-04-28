@@ -1,0 +1,56 @@
+[project]
+name = "philologist-lsp"
+version = "0.0.1"
+description = "Language Server that surfaces morphology and orality of natural-language text"
+readme = "../README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Zack Maril", email = "zack@zacharymaril.com" }]
+
+dependencies = [
+    "pygls>=1.3.0",
+    "lsprotocol>=2023.0.1",
+    "platformdirs>=4.0.0",
+]
+
+[project.optional-dependencies]
+# Pulled lazily by the server when first needed. Keeping them out of the base
+# install lets P0 boot quickly and lets us add ML deps incrementally per phase.
+nlp = [
+    "spacy>=3.7.0",
+    "lingua-language-detector>=2.0.0",
+    # Real pip — spacy.cli.download shells out to `python -m pip install`,
+    # and we don't want it to hit uv's pip shim (which scans $PATH for Python
+    # interpreters and chokes on broken installs like /usr/local/bin/python3).
+    "pip>=24.0",
+]
+orality = [
+    "torch>=2.2.0",
+    "transformers>=4.40.0",
+    "huggingface-hub>=0.23.0",
+]
+llm = [
+    "torch>=2.2.0",
+    "transformers>=4.40.0",
+    "huggingface-hub>=0.23.0",
+    "accelerate>=0.33.0",
+]
+all = [
+    "philologist-lsp[nlp,orality,llm]",
+]
+
+[project.scripts]
+philologist-lsp = "philologist_lsp.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/philologist_lsp"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+]

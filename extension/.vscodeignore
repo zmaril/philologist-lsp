@@ -1,0 +1,19 @@
+# Source TypeScript and dev tooling — only the compiled JS in out/ ships.
+src/**
+tsconfig.json
+.vscode/**
+.vscode-test/**
+
+# Source maps balloon the package without runtime benefit.
+**/*.map
+
+# Build cruft.
+node_modules/**
+.gitignore
+.npmignore
+.eslintrc*
+*.tsbuildinfo
+
+# Standard noise.
+.DS_Store
+.git/**

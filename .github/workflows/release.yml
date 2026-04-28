@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v0.0.7). If running from a tag push, this is ignored."
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      # uv build needs a Python to invoke the build backend; pin one
+      # explicitly so we don't hit "no interpreter" on cold runners.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Install extension dependencies
+        working-directory: extension
+        run: npm ci
+
+      - name: Build .vsix (wheel + bundle + package)
+        working-directory: extension
+        run: vsce package
+
+      - name: Show packaged file
+        working-directory: extension
+        run: ls -la *.vsix
+
+      - name: Upload .vsix as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: extension/*.vsix
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        # Skip the release step on workflow_dispatch runs that don't have
+        # an associated tag — those are useful for testing the build.
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: extension/*.vsix
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          body: |
+            Install via `code --install-extension philologist-lsp-${{ github.ref_name }}.vsix`
+            after downloading the `.vsix` below.
+
+            Requires [`uv`](https://docs.astral.sh/uv/) on PATH; on first run the
+            extension creates a Python virtualenv at `~/.philologist-lsp/venv`
+            and pulls in spaCy, transformers, torch, and friends. Plan for ~3 GB
+            of language-model downloads on first use.

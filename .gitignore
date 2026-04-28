@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.uv/
+.pytest_cache/
+.ruff_cache/
+
+# Node / VSCode extension
+node_modules/
+out/
+*.vsix
+.vscode-test/
+
+# OS
+.DS_Store
+
+# Local model + weight cache (if anything ends up here during dev)
+.cache/
+weights/
+extension/node_modules

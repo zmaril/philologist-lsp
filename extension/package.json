@@ -1,0 +1,513 @@
+{
+  "name": "philologist-lsp",
+  "displayName": "Philologist",
+  "description": "Morphological and oral/literate analysis of natural-language text — gender colors, case underlines, sentence-level orality marking, and per-word definitions, all running locally.",
+  "version": "0.0.6",
+  "publisher": "zmaril",
+  "license": "MIT",
+  "homepage": "https://github.com/zackmaril/philologist-lsp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zackmaril/philologist-lsp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zackmaril/philologist-lsp/issues"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Education",
+    "Other"
+  ],
+  "keywords": [
+    "language-server",
+    "linguistics",
+    "morphology",
+    "philology",
+    "german",
+    "language-learning",
+    "spaCy",
+    "nlp",
+    "orality"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onLanguage:plaintext",
+    "onLanguage:markdown"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "philologist.restart",
+        "title": "Restart Server",
+        "category": "Philologist"
+      },
+      {
+        "command": "philologist.toggleMorphology",
+        "title": "Toggle Morphology",
+        "category": "Philologist"
+      },
+      {
+        "command": "philologist.toggleOrality",
+        "title": "Toggle Orality",
+        "category": "Philologist"
+      },
+      {
+        "command": "philologist.toggleDefinitions",
+        "title": "Toggle LLM Definitions",
+        "category": "Philologist"
+      },
+      {
+        "command": "philologist.disableForFile",
+        "title": "Disable For Current File",
+        "category": "Philologist"
+      },
+      {
+        "command": "philologist.enableForFile",
+        "title": "Enable For Current File",
+        "category": "Philologist"
+      },
+      {
+        "command": "philologist.showServerLog",
+        "title": "Show Server Output",
+        "category": "Philologist"
+      },
+      {
+        "command": "philologist.diagnose",
+        "title": "Show Bootstrap Log",
+        "category": "Philologist"
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "philologistMasculine",
+        "description": "Token whose head noun is grammatically masculine."
+      },
+      {
+        "id": "philologistFeminine",
+        "description": "Token whose head noun is grammatically feminine."
+      },
+      {
+        "id": "philologistNeuter",
+        "description": "Token whose head noun is grammatically neuter."
+      },
+      {
+        "id": "philologistCommon",
+        "description": "Token in a language with a single common gender (e.g. Swedish, Dutch)."
+      },
+      {
+        "id": "philologistPlural",
+        "description": "Plural token whose gender is unspecified or syncretic."
+      },
+      {
+        "id": "philologistVerb",
+        "description": "Verb (full / auxiliary / modal)."
+      },
+      {
+        "id": "philologistAdjective",
+        "description": "Adjective."
+      },
+      {
+        "id": "philologistAdverb",
+        "description": "Adverb."
+      },
+      {
+        "id": "philologistParticle",
+        "description": "Particle."
+      },
+      {
+        "id": "philologistConjunction",
+        "description": "Coordinating or subordinating conjunction."
+      },
+      {
+        "id": "philologistInterjection",
+        "description": "Interjection."
+      }
+    ],
+    "semanticTokenModifiers": [
+      {
+        "id": "plural",
+        "description": "Plural number."
+      },
+      {
+        "id": "definite",
+        "description": "Definite article or determiner."
+      },
+      {
+        "id": "indefinite",
+        "description": "Indefinite article or determiner."
+      },
+      {
+        "id": "regular",
+        "description": "Regular (regelmäßig) verb conjugation."
+      },
+      {
+        "id": "irregular",
+        "description": "Irregular (unregelmäßig / strong) verb conjugation."
+      },
+      {
+        "id": "modal",
+        "description": "Modal verb."
+      },
+      {
+        "id": "auxiliary",
+        "description": "Auxiliary verb."
+      },
+      {
+        "id": "separable",
+        "description": "Separable-prefix verb."
+      },
+      {
+        "id": "comparative",
+        "description": "Comparative degree."
+      },
+      {
+        "id": "superlative",
+        "description": "Superlative degree."
+      },
+      {
+        "id": "nominative",
+        "description": "Nominative case."
+      },
+      {
+        "id": "accusative",
+        "description": "Accusative case."
+      },
+      {
+        "id": "dative",
+        "description": "Dative case."
+      },
+      {
+        "id": "genitive",
+        "description": "Genitive case."
+      }
+    ],
+    "colors": [
+      {
+        "id": "philologist.case.nominative",
+        "description": "Nominative case underline (matches 🟦)",
+        "defaults": {
+          "dark": "#5DADE2",
+          "light": "#3498DB",
+          "highContrast": "#5DADE2"
+        }
+      },
+      {
+        "id": "philologist.case.accusative",
+        "description": "Accusative case underline (matches 🟥)",
+        "defaults": {
+          "dark": "#ED4040",
+          "light": "#C0392B",
+          "highContrast": "#ED4040"
+        }
+      },
+      {
+        "id": "philologist.case.dative",
+        "description": "Dative case underline (matches 🟧)",
+        "defaults": {
+          "dark": "#F2A03D",
+          "light": "#E67E22",
+          "highContrast": "#F2A03D"
+        }
+      },
+      {
+        "id": "philologist.case.genitive",
+        "description": "Genitive case underline (matches 🟩)",
+        "defaults": {
+          "dark": "#66C04F",
+          "light": "#27AE60",
+          "highContrast": "#66C04F"
+        }
+      },
+      {
+        "id": "philologist.case.vocative",
+        "description": "Vocative case underline (matches 🟪)",
+        "defaults": {
+          "dark": "#B069C7",
+          "light": "#9B59B6",
+          "highContrast": "#B069C7"
+        }
+      },
+      {
+        "id": "philologist.case.instrumental",
+        "description": "Instrumental case underline (🟦)",
+        "defaults": {
+          "dark": "#5DADE2",
+          "light": "#3498DB",
+          "highContrast": "#5DADE2"
+        }
+      },
+      {
+        "id": "philologist.case.locative",
+        "description": "Locative case underline (🟦)",
+        "defaults": {
+          "dark": "#5DADE2",
+          "light": "#3498DB",
+          "highContrast": "#5DADE2"
+        }
+      },
+      {
+        "id": "philologist.case.ablative",
+        "description": "Ablative case underline (🟪)",
+        "defaults": {
+          "dark": "#B069C7",
+          "light": "#9B59B6",
+          "highContrast": "#B069C7"
+        }
+      },
+      {
+        "id": "philologist.verb.regular",
+        "description": "Regular verb sigil",
+        "defaults": {
+          "dark": "#7CD992",
+          "light": "#1B8A3A",
+          "highContrast": "#7CD992"
+        }
+      },
+      {
+        "id": "philologist.verb.irregular",
+        "description": "Irregular verb sigil",
+        "defaults": {
+          "dark": "#FF6B6B",
+          "light": "#C42626",
+          "highContrast": "#FF6B6B"
+        }
+      },
+      {
+        "id": "philologist.verb.modal",
+        "description": "Modal verb sigil",
+        "defaults": {
+          "dark": "#C9A0FF",
+          "light": "#7140C0",
+          "highContrast": "#C9A0FF"
+        }
+      },
+      {
+        "id": "philologist.verb.auxiliary",
+        "description": "Auxiliary verb sigil",
+        "defaults": {
+          "dark": "#9DA5B4",
+          "light": "#5C6470",
+          "highContrast": "#9DA5B4"
+        }
+      },
+      {
+        "id": "philologist.verb.separable",
+        "description": "Separable-prefix verb sigil",
+        "defaults": {
+          "dark": "#FFD867",
+          "light": "#A07700",
+          "highContrast": "#FFD867"
+        }
+      },
+      {
+        "id": "philologist.degree.comparative",
+        "description": "Comparative degree sigil",
+        "defaults": {
+          "dark": "#9DD0FF",
+          "light": "#3F7FBE",
+          "highContrast": "#9DD0FF"
+        }
+      },
+      {
+        "id": "philologist.degree.superlative",
+        "description": "Superlative degree sigil",
+        "defaults": {
+          "dark": "#5BA3FF",
+          "light": "#1F6FE5",
+          "highContrast": "#5BA3FF"
+        }
+      },
+      {
+        "id": "philologist.orality.oral.background",
+        "description": "Background tint for sentences classified as oral.",
+        "defaults": {
+          "dark": "#1F4A4A40",
+          "light": "#9DE0DC50",
+          "highContrast": "#1F4A4A40"
+        }
+      },
+      {
+        "id": "philologist.orality.oral.foreground",
+        "description": "Foreground for sentences classified as oral (usually inherit).",
+        "defaults": {
+          "dark": "#E0F0EE",
+          "light": "#1A2E2C",
+          "highContrast": "#E0F0EE"
+        }
+      },
+      {
+        "id": "philologist.orality.oral.tagBackground",
+        "description": "Background of the marker tag chip for oral sentences.",
+        "defaults": {
+          "dark": "#5DE2D6",
+          "light": "#34A89E",
+          "highContrast": "#5DE2D6"
+        }
+      },
+      {
+        "id": "philologist.orality.oral.tagForeground",
+        "description": "Tag text color for oral sentences.",
+        "defaults": {
+          "dark": "#0A1717",
+          "light": "#0A1717",
+          "highContrast": "#000000"
+        }
+      },
+      {
+        "id": "philologist.orality.literate.background",
+        "description": "Background tint for sentences classified as literate.",
+        "defaults": {
+          "dark": "#3B2A6C40",
+          "light": "#C9B6FA50",
+          "highContrast": "#3B2A6C40"
+        }
+      },
+      {
+        "id": "philologist.orality.literate.foreground",
+        "description": "Foreground for sentences classified as literate.",
+        "defaults": {
+          "dark": "#E5DCFC",
+          "light": "#1F1538",
+          "highContrast": "#E5DCFC"
+        }
+      },
+      {
+        "id": "philologist.orality.literate.tagBackground",
+        "description": "Background of the marker tag chip for literate sentences.",
+        "defaults": {
+          "dark": "#A37BFF",
+          "light": "#7140C0",
+          "highContrast": "#A37BFF"
+        }
+      },
+      {
+        "id": "philologist.orality.literate.tagForeground",
+        "description": "Tag text color for literate sentences.",
+        "defaults": {
+          "dark": "#FFFFFF",
+          "light": "#FFFFFF",
+          "highContrast": "#FFFFFF"
+        }
+      }
+    ],
+    "configurationDefaults": {
+      "editor.semanticHighlighting.enabled": true,
+      "editor.semanticTokenColorCustomizations": {
+        "enabled": true,
+        "rules": {
+          "philologistMasculine": "#5BA3FF",
+          "philologistFeminine": "#FF6B9D",
+          "philologistNeuter": "#A879FF",
+          "philologistCommon": "#FFB347",
+          "philologistPlural": {
+            "foreground": "#7CD992",
+            "fontStyle": "italic"
+          },
+          "philologistVerb": "#E8C547",
+          "philologistAdjective": "#9DD0FF",
+          "philologistAdverb": "#C9A0FF",
+          "philologistParticle": "#B8B8B8",
+          "philologistConjunction": "#B8B8B8",
+          "philologistInterjection": "#FF8866",
+          "*.modal": {
+            "fontStyle": "bold"
+          },
+          "*.auxiliary": {
+            "fontStyle": "italic"
+          },
+          "*.irregular": {
+            "fontStyle": "underline"
+          },
+          "*.plural": {
+            "fontStyle": "italic"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "title": "Philologist",
+      "properties": {
+        "philologist.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Override path to the philologist-lsp executable. Leave empty to use the bundled venv."
+        },
+        "philologist.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a Python interpreter (>= 3.10). Leave empty to auto-detect."
+        },
+        "philologist.spacyModelSize": {
+          "type": "string",
+          "enum": [
+            "sm",
+            "md",
+            "lg",
+            "trf"
+          ],
+          "default": "md",
+          "description": "spaCy model size to use for morphological analysis."
+        },
+        "philologist.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Master switch for all Philologist analysis."
+        },
+        "philologist.morphology.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show gender colors, case underlines, verb sigils, and morph hover."
+        },
+        "philologist.orality.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run havelock-orality on English sentences (CodeLens, status bar, gutter numbers, span backgrounds)."
+        },
+        "philologist.orality.minConfidence": {
+          "type": "number",
+          "default": 0.25,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Skip orality markers whose top-class confidence falls below this threshold. Lower → more (noisier) markers."
+        },
+        "philologist.definitions.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate per-word definitions on hover via the bundled local LLM."
+        },
+        "philologist.gutterNumbers.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Number English sentences in the gutter."
+        },
+        "philologist.respectDisableMarker": {
+          "type": "boolean",
+          "default": true,
+          "description": "Honor `philologist: off` (or `disable`/`disabled`) markers in the first 10 lines of a file. Useful for opting individual files out of analysis."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -p ./ --noEmit",
+    "watch": "tsc -watch -p ./ --noEmit",
+    "build:wheel": "rm -rf server-wheel && mkdir -p server-wheel && (cd ../server && uv build --wheel --out-dir ../extension/server-wheel)",
+    "build:bundle": "esbuild src/extension.ts --bundle --platform=node --target=node20 --external:vscode --format=cjs --outfile=out/extension.js --minify",
+    "vscode:prepublish": "npm run build:wheel && npm run typecheck && npm run build:bundle",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.4.0"
+  }
+}
