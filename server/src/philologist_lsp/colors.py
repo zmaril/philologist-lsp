@@ -14,7 +14,7 @@ TOKEN_TYPES: tuple[str, ...] = (
     "philologistFeminine",
     "philologistNeuter",
     "philologistCommon",
-    "philologistPlural",         # used when gender is unknown but plural is
+    "philologistPlural",  # used when gender is unknown but plural is
     "philologistVerb",
     "philologistAdjective",
     "philologistAdverb",

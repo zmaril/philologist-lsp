@@ -34,7 +34,7 @@ VERB_CLASS_GLYPH: dict[str, str] = {
 
 # Regular vs irregular for verbs (German only — None means we don't know).
 VERB_REGULAR_GLYPH: dict[bool, str] = {
-    True: "□",   # regelmäßig
+    True: "□",  # regelmäßig
     False: "■",  # unregelmäßig
 }
 

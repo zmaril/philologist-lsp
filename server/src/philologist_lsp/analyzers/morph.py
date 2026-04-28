@@ -38,11 +38,11 @@ class TokenAnalysis:
 
     text: str
     lemma: str
-    pos: str           # spaCy UPOS, e.g. "NOUN", "VERB", "DET", "ADJ"
-    tag: str           # spaCy fine-grained tag (language-specific)
+    pos: str  # spaCy UPOS, e.g. "NOUN", "VERB", "DET", "ADJ"
+    tag: str  # spaCy fine-grained tag (language-specific)
     start: int
     end: int
-    language: str      # ISO 639-1 code
+    language: str  # ISO 639-1 code
 
     case: str | None
     gender: str | None
@@ -57,9 +57,9 @@ class TokenAnalysis:
     degree: str | None
 
     # Derived (per-language).
-    verb_class: str | None       # "full" | "aux" | "modal" | None
-    regular: bool | None         # True | False | None
-    separable: bool | None       # True | False | None
+    verb_class: str | None  # "full" | "aux" | "modal" | None
+    regular: bool | None  # True | False | None
+    separable: bool | None  # True | False | None
 
     @property
     def is_word(self) -> bool:
@@ -172,4 +172,4 @@ class DocumentAnalysis:
     text: str
     tokens: tuple[TokenAnalysis, ...]
     sentences: tuple[Sentence, ...]
-    version: int   # text-document version this analysis belongs to
+    version: int  # text-document version this analysis belongs to

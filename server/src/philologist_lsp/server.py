@@ -84,7 +84,14 @@ class PhilologistServer(LanguageServer):
                 on_download_end=self._download_progress_end,
                 on_ready=self._on_model_ready,
             )
-        if self.definitions is None or self.havelock is None:
+        # Heavy ML services are gated by their feature flags. A user who
+        # has disabled definitions / orality should not pay the ~3 GB
+        # download cost on first activation. If they re-enable later, the
+        # service constructs lazily on the next analysis run.
+        needs_transformers = (
+            self.definitions_enabled and self.definitions is None
+        ) or (self.orality_enabled and self.havelock is None)
+        if needs_transformers:
             # transformers 5.x uses _LazyModule with __getattr__ that races
             # between threads — multiple background loaders calling
             # `from transformers import X` concurrently can hit a
@@ -93,19 +100,20 @@ class PhilologistServer(LanguageServer):
             # service whose preload thread will need them.
             try:
                 import transformers  # noqa: PLC0415
+
                 transformers.AutoModel
                 transformers.AutoTokenizer
                 transformers.AutoModelForCausalLM
             except Exception:  # noqa: BLE001
                 logger.exception("transformers warm-up failed")
 
-        if self.definitions is None:
+        if self.definitions_enabled and self.definitions is None:
             logger.info("starting definition LLM preload")
             self.definitions = DefinitionService(
                 on_load_start=self._download_progress_begin,
                 on_load_end=self._download_progress_end,
             )
-        if self.havelock is None:
+        if self.orality_enabled and self.havelock is None:
             logger.info("starting havelock orality preload")
             self.havelock = HavelockService(
                 on_load_start=self._download_progress_begin,
@@ -148,9 +156,7 @@ class PhilologistServer(LanguageServer):
         if token is None:
             return
         try:
-            self.work_done_progress.end(
-                token, lsp.WorkDoneProgressEnd(message=message)
-            )
+            self.work_done_progress.end(token, lsp.WorkDoneProgressEnd(message=message))
         except Exception:  # noqa: BLE001
             logger.exception("failed to end progress for %s", key)
 
@@ -199,9 +205,7 @@ async def _analyze_document(ls: PhilologistServer, uri: str) -> None:
 
     # Master toggle and per-file `philologist: off` marker. When either is
     # in effect, blank out previous outputs and skip the heavy work.
-    file_disabled = (
-        ls.respect_disable_marker and _is_disabled_in_file(text)
-    )
+    file_disabled = ls.respect_disable_marker and _is_disabled_in_file(text)
     if not ls.feature_enabled or file_disabled:
         await _clear_analysis(ls, uri, text, version)
         if file_disabled:
@@ -235,10 +239,15 @@ async def _analyze_document(ls: PhilologistServer, uri: str) -> None:
     ls.analyses[uri] = analysis
     ls.ready_event(uri).set()
 
-    languages = sorted({p.detection.iso_code for p in paragraphs if p.detection.iso_code})
+    languages = sorted(
+        {p.detection.iso_code for p in paragraphs if p.detection.iso_code}
+    )
     logger.info(
         "analysis ready: %s (%d tokens, %d paragraphs, langs=%s)",
-        uri, len(all_tokens), len(paragraphs), ",".join(languages) or "?",
+        uri,
+        len(all_tokens),
+        len(paragraphs),
+        ",".join(languages) or "?",
     )
 
     # Tell VSCode to re-pull semantic tokens.
@@ -276,9 +285,7 @@ async def _analyze_document(ls: PhilologistServer, uri: str) -> None:
                 continue
             leading = len(s.text) - len(s.text.lstrip())
             trailing = len(s.text) - len(s.text.rstrip())
-            english_sentences.append(
-                (stripped, s.start + leading, s.end - trailing)
-            )
+            english_sentences.append((stripped, s.start + leading, s.end - trailing))
         orality_spans: list[OralitySpan] = []
         if english_sentences:
             try:
@@ -434,9 +441,7 @@ def on_initialized(ls: PhilologistServer, params: lsp.InitializedParams) -> None
 
 
 @server.feature(lsp.TEXT_DOCUMENT_DID_OPEN)
-def on_did_open(
-    ls: PhilologistServer, params: lsp.DidOpenTextDocumentParams
-) -> None:
+def on_did_open(ls: PhilologistServer, params: lsp.DidOpenTextDocumentParams) -> None:
     doc = params.text_document
     logger.info("didOpen %s (%s, %d chars)", doc.uri, doc.language_id, len(doc.text))
     _schedule_analysis(ls, doc.uri)
@@ -450,9 +455,7 @@ def on_did_change(
 
 
 @server.feature(lsp.TEXT_DOCUMENT_DID_CLOSE)
-def on_did_close(
-    ls: PhilologistServer, params: lsp.DidCloseTextDocumentParams
-) -> None:
+def on_did_close(ls: PhilologistServer, params: lsp.DidCloseTextDocumentParams) -> None:
     uri = params.text_document.uri
     logger.info("didClose %s", uri)
     task = ls._debounce_tasks.pop(uri, None)
@@ -507,9 +510,7 @@ def _apply_settings(ls: PhilologistServer, settings: dict) -> None:
 
 
 @server.feature(lsp.INITIALIZE)
-def on_initialize(
-    ls: PhilologistServer, params: lsp.InitializeParams
-) -> None:
+def on_initialize(ls: PhilologistServer, params: lsp.InitializeParams) -> None:
     options = getattr(params, "initialization_options", None)
     if isinstance(options, dict):
         _apply_settings(ls, options)
@@ -544,9 +545,7 @@ async def on_semantic_tokens_full(
 
 
 @server.feature(lsp.TEXT_DOCUMENT_HOVER)
-async def on_hover(
-    ls: PhilologistServer, params: lsp.HoverParams
-) -> lsp.Hover | None:
+async def on_hover(ls: PhilologistServer, params: lsp.HoverParams) -> lsp.Hover | None:
     analysis = await _await_analysis(ls, params.text_document.uri)
     if analysis is None:
         return None
@@ -575,7 +574,8 @@ async def on_hover(
         except asyncio.TimeoutError:
             logger.warning(
                 "definition lookup timed out for %r (%s)",
-                token.text, token.language,
+                token.text,
+                token.language,
             )
 
     orality_block = _orality_for_token(ls, params.text_document.uri, token)
@@ -602,6 +602,7 @@ def on_code_lens(
         return None
 
     from philologist_lsp.render.positions import LineIndex  # noqa: PLC0415
+
     line_index = LineIndex(analysis.text)
     text_lines = analysis.text.split("\n")
     lenses: list[lsp.CodeLens] = []
@@ -621,8 +622,13 @@ def on_code_lens(
         display = span.marker.replace("_", " ").upper()
         suffix = f" +{len(span.alternatives)}" if span.alternatives else ""
         title = f"{emoji} {display}{suffix} · {int(span.confidence * 100)}%"
+        # Clicking opens the server output channel — gives users somewhere
+        # to land when they click rather than a dead button.
         lenses.append(
-            lsp.CodeLens(range=rng, command=lsp.Command(title=title, command=""))
+            lsp.CodeLens(
+                range=rng,
+                command=lsp.Command(title=title, command="philologist.showServerLog"),
+            )
         )
     return lenses
 

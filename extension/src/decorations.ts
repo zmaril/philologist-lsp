@@ -15,27 +15,6 @@ export interface DecorationsParams {
   decorations: DecorationItem[];
 }
 
-// Decoration kinds we know about. Each gets its own TextEditorDecorationType
-// keyed by `kind` plus the glyph (since the glyph is fixed when the type is
-// created — we have to make a new type per (kind, glyph) combination).
-const KNOWN_KINDS: readonly string[] = [
-  "case.nominative",
-  "case.accusative",
-  "case.dative",
-  "case.genitive",
-  "case.vocative",
-  "case.instrumental",
-  "case.locative",
-  "case.ablative",
-  "verb.regular",
-  "verb.irregular",
-  "verb.modal",
-  "verb.auxiliary",
-  "verb.separable",
-  "degree.comparative",
-  "degree.superlative",
-];
-
 // Cache: (kind|glyph) → TextEditorDecorationType.
 const typeCache = new Map<string, vscode.TextEditorDecorationType>();
 
@@ -172,6 +151,3 @@ export function disposeAll(): void {
   lastByUri.clear();
 }
 
-// Expose the kind list so package.json can stay in sync if we want to
-// regenerate `contributes.colors`. Not currently used at runtime.
-export const allKinds = KNOWN_KINDS;

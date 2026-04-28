@@ -40,9 +40,22 @@ function ensureStatusBar(): vscode.StatusBarItem {
   return statusBar;
 }
 
-function updateStatusBar(params: OralityParams): void {
+/**
+ * Refresh the status bar to reflect the *active* editor's orality score —
+ * not whichever file was most recently analyzed. Without this, the bar
+ * gets stale when the user switches between an English-y file and a
+ * non-English one.
+ */
+function refreshStatusBar(): void {
   const bar = ensureStatusBar();
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    bar.hide();
+    return;
+  }
+  const params = lastByUri.get(editor.document.uri.toString());
   if (
+    !params ||
     params.documentScore === null ||
     params.documentScore === undefined ||
     !params.documentCategory
@@ -110,7 +123,7 @@ const lastByUri = new Map<string, OralityParams>();
 
 export function applyOrality(params: OralityParams): void {
   lastByUri.set(params.uri, params);
-  updateStatusBar(params);
+  refreshStatusBar();
   for (const editor of vscode.window.visibleTextEditors) {
     if (editor.document.uri.toString() === params.uri) {
       paintEditor(editor, params);
@@ -123,10 +136,12 @@ export function reapplyForEditor(editor: vscode.TextEditor): void {
   if (params) {
     paintEditor(editor, params);
   }
+  refreshStatusBar();
 }
 
 export function clearForUri(uri: string): void {
   lastByUri.delete(uri);
+  refreshStatusBar();
 }
 
 function paintEditor(

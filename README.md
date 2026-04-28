@@ -2,77 +2,84 @@
 
 A Language Server that surfaces the morphological and rhetorical structure of natural-language text the way a philologist reads it.
 
-- **Per-token morphology** via spaCy: gender, number, case, tense, mood, voice. Rendered as semantic-token colors and inlay-hint sigils.
-- **Per-paragraph orality** via [havelock-orality](https://huggingface.co/thestalwart/havelock-orality): regressor (0–1 score), category (oral / literate), and 68-class subtype span markers. English only for now.
+- **Per-token morphology** via spaCy: gender, number, case, tense, mood, voice. Rendered as semantic-token colors and `TextEditorDecorationType` underlines.
+- **Sentence-level orality** for English via [havelock-orality](https://huggingface.co/thestalwart/havelock-orality): a 71-class oral / literate marker classifier surfaced as CodeLenses, plus a document-level regressor in the status bar.
+- **Per-word definitions** generated locally by [Qwen3.5-0.8B](https://huggingface.co/Qwen/Qwen3.5-0.8B) on hover.
 - **Auto language detection** per paragraph via [lingua](https://github.com/pemistahl/lingua-py); spaCy models for ~24 languages auto-download on first use.
-- **Pure LSP**, runs locally, no external API calls.
+- Runs locally. No cloud APIs after the first model downloads.
 
-See [DESIGN.md](./DESIGN.md) for architecture and rationale.
+## Install
 
-Inspired by Barbara Avila Vissirini, *Dieses kleine Buch ist für dich* — a graphical grammar for German as a foreign language.
+Grab the `.vsix` from the [latest release](https://github.com/zmaril/philologist-lsp/releases/latest) and install it:
 
-## Status
+```bash
+code --install-extension philologist-lsp-<version>.vsix
+```
 
-Early development. Currently:
+Or in VSCode: `Extensions: Install from VSIX…` and pick the downloaded file.
 
-- [x] P0 — server + extension scaffolding
-- [x] P1 — language detect + spaCy pool
-- [x] P2 — morph rendering (semantic tokens, inlay hints, hover)
-- [ ] P3 — orality regressor + category
-- [ ] P4 — orality subtype spans
-- [ ] P5 — packaging
+**Requirements:**
+- VSCode 1.85+
+- [`uv`](https://docs.astral.sh/uv/) on `PATH` (the extension uses it to manage its own Python venv)
+- ~3 GB free disk for first-run language-model downloads (spaCy models, BERT, Qwen). Done lazily, with progress notifications.
+
+On first activation, the extension creates `~/.philologist-lsp/venv` and installs the bundled wheel into it. Subsequent updates re-install in place.
+
+## Inspirations
+
+- **Visual grammar**: Barbara Avila Vissirini, *[Dieses kleine Buch ist für dich](https://barbaravissirini.com/dieses-kleine-buch)* — a graphical grammar for German as a foreign language. The case-underline + gender-color encoding mirrors hers as closely as VSCode allows.
+- **Orality framework**: Walter Ong, *[Orality and Literacy: The Technologizing of the Word](https://en.wikipedia.org/wiki/Orality_and_Literacy)* (1982). The 71-class taxonomy and the oral / literate split come from this framework.
+- **Theory background**: Eric Havelock, *[Preface to Plato](https://en.wikipedia.org/wiki/Eric_A._Havelock#Preface_to_Plato)* (1963), which the [havelock.ai](https://havelock.ai/) project is named after.
 
 ## Repo layout
 
 ```
 philologist-lsp/
-├── DESIGN.md           # design doc
 ├── server/             # Python LSP (pygls)
 │   ├── pyproject.toml
 │   └── src/philologist_lsp/
-└── extension/          # VSCode extension (TypeScript)
-    ├── package.json
-    └── src/extension.ts
+├── extension/          # VSCode extension (TypeScript)
+│   ├── package.json
+│   └── src/extension.ts
+└── .github/workflows/  # CI + release
 ```
 
 ## Running locally (dev)
 
-Prerequisites: `python ≥ 3.10`, `uv`, `node ≥ 20`, VSCode.
+Prerequisites: `python ≥ 3.10`, [`uv`](https://docs.astral.sh/uv/), `node ≥ 20`, VSCode.
 
 ```bash
 # server
 cd server
-uv sync                                  # installs pygls + lsprotocol
-uv run python -m philologist_lsp         # smoke test (Ctrl-C to exit)
+uv sync                            # installs spaCy, transformers, torch, etc.
+uv run python -m philologist_lsp   # smoke test (Ctrl-C to exit)
 
 # extension
 cd ../extension
 npm install
-npm run typecheck                        # tsc check
+npm run typecheck
 ```
+
+`uv sync` defaults to installing the `nlp` + `llm` extras via `[tool.uv] default-extras`. To skip the ML stack (e.g. to verify the server module still loads with only base deps), run `uv sync --no-default-extras`.
 
 In VSCode: open `extension/`, press `F5` to launch the Extension Development Host. Open a `.txt` or `.md` file in the new window — the language server will activate.
 
 ## Releasing
 
-Releases are built and published to GitHub Releases by `.github/workflows/release.yml` on tag push:
+Releases are built and published to GitHub Releases by `.github/workflows/release.yml` on tag push. The workflow syncs the version from the tag into both `extension/package.json` and `server/pyproject.toml`, builds the `.vsix`, and attaches it to a release with auto-generated notes:
 
 ```bash
-# bump version in extension/package.json (and server/pyproject.toml if you want them in sync)
-git commit -am "v0.0.7"
-git tag v0.0.7
-git push origin v0.0.7
+git tag v0.0.10
+git push origin v0.0.10
 ```
 
-The workflow runs `vsce package` against a clean checkout, attaches the `.vsix` to a new GitHub Release, and includes auto-generated release notes. Anyone can install with `code --install-extension philologist-lsp-0.0.7.vsix` after downloading the asset.
+Manual builds without a release can be triggered from the Actions tab via *Run workflow*.
 
-Manual builds (no release) can be triggered from the Actions tab via *Run workflow*.
+## Theming
 
-## Theming the gender colors
+The extension ships a default color palette for its custom semantic-token types (`philologistMasculine`, `philologistFeminine`, `philologistNeuter`, `philologistCommon`, `philologistPlural`, `philologistVerb`, `philologistAdjective`, …) and case-underline colors (`philologist.case.*`) via `contributes.configurationDefaults`. Colors apply automatically when the extension activates.
 
-The extension ships a default color palette for its custom semantic-token types (`philologistMasculine`, `philologistFeminine`, `philologistNeuter`, `philologistCommon`, `philologistPlural`, `philologistVerb`, `philologistAdjective`, …) via `contributes.configurationDefaults`. Colors apply automatically the moment the extension activates — no manual `settings.json` edit required.
-
-To override, add your own block to User `settings.json`:
+To override:
 
 ```json
 "editor.semanticTokenColorCustomizations": {
@@ -80,11 +87,18 @@ To override, add your own block to User `settings.json`:
     "philologistMasculine": "#88E0FF",
     "philologistFeminine":  "#FFB6C1"
   }
+},
+"workbench.colorCustomizations": {
+  "philologist.case.dative": "#FFD700"
 }
 ```
 
-Modifiers available for fine-grained styling: `plural`, `definite`, `indefinite`, `regular`, `irregular`, `modal`, `auxiliary`, `separable`, `comparative`, `superlative`, `nominative`, `accusative`, `dative`, `genitive`.
+Modifiers available: `plural`, `definite`, `indefinite`, `regular`, `irregular`, `modal`, `auxiliary`, `separable`, `comparative`, `superlative`, `nominative`, `accusative`, `dative`, `genitive`.
 
-## Configuration
+## Configuration + Commands
 
-See `philologist.*` settings in VSCode (contributed by the extension). Defaults are sensible.
+`philologist.*` settings let you toggle morphology, orality, and LLM definitions individually. Command palette: `Philologist: Restart Server`, `Toggle Morphology`, `Disable For Current File`, `Show Server Output`, etc. See the marketplace [extension README](./extension/README.md) for the full list.
+
+## License
+
+MIT — see [LICENSE](./LICENSE).

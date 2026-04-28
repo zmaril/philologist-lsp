@@ -195,6 +195,7 @@ class SpacyPool:
         logger.info("downloading spaCy model %s", model_name)
         import spacy  # noqa: PLC0415
         from spacy.cli.download import download as spacy_download  # noqa: PLC0415
+
         if self._on_download_start:
             try:
                 self._on_download_start(

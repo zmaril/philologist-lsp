@@ -46,18 +46,23 @@ CASE_LABEL: dict[str, str] = {
 #
 # Case → squares (matches editor underline)
 CASE_EMOJI: dict[str, str] = {
-    "Nom": "🟦", "Acc": "🟥", "Dat": "🟧",
-    "Gen": "🟩", "Voc": "🟪",
-    "Ins": "🟦", "Loc": "🟦", "Abl": "🟪",
+    "Nom": "🟦",
+    "Acc": "🟥",
+    "Dat": "🟧",
+    "Gen": "🟩",
+    "Voc": "🟪",
+    "Ins": "🟦",
+    "Loc": "🟦",
+    "Abl": "🟪",
 }
 
 # Gender → hearts (pink heart fills the gap left by the missing pink
 # square emoji; uniformly hearts so all gender markers share a shape).
 GENDER_EMOJI: dict[str, str] = {
     "Masc": "💙",
-    "Fem":  "💗",
+    "Fem": "💗",
     "Neut": "💜",
-    "Com":  "🧡",
+    "Com": "🧡",
 }
 
 # Number → green heart for plural; singular gets no marker.
@@ -68,7 +73,7 @@ NUMBER_EMOJI: dict[str, str] = {
 # Verb class / regularity / separability → circles.
 VERB_CLASS_EMOJI: dict[str, str] = {
     "modal": "🟣",
-    "aux":   "⚪",
+    "aux": "⚪",
 }
 REGULAR_EMOJI = "🟢"
 IRREGULAR_EMOJI = "🔴"
@@ -102,6 +107,8 @@ def _styled_regularity(regular: bool) -> str:
     if regular:
         return f"{REGULAR_EMOJI} **regelmäßig**"
     return f"{IRREGULAR_EMOJI} **unregelmäßig**"
+
+
 TENSE_LABEL: dict[str, str] = {
     "Pres": "present",
     "Past": "past",
@@ -162,14 +169,24 @@ def _morph_table(token: TokenAnalysis) -> str:
         _row("Number", _styled_number(token.number) if token.number else None),
         _row("Case", _styled_case(token.case) if token.case else None),
         _row("Person", token.person),
-        _row("Tense", TENSE_LABEL.get(token.tense or "", token.tense) if token.tense else None),
-        _row("Mood", MOOD_LABEL.get(token.mood or "", token.mood) if token.mood else None),
+        _row(
+            "Tense",
+            TENSE_LABEL.get(token.tense or "", token.tense) if token.tense else None,
+        ),
+        _row(
+            "Mood", MOOD_LABEL.get(token.mood or "", token.mood) if token.mood else None
+        ),
         _row("Verb form", token.verb_form),
         _row("Voice", token.voice),
         _row("Definite", token.definite),
         _row("Pronoun type", token.pron_type),
-        _row("Degree", token.degree if token.degree and token.degree != "Pos" else None),
-        _row("Verb class", _styled_verb_class(token.verb_class) if token.verb_class else None),
+        _row(
+            "Degree", token.degree if token.degree and token.degree != "Pos" else None
+        ),
+        _row(
+            "Verb class",
+            _styled_verb_class(token.verb_class) if token.verb_class else None,
+        ),
     ]
     if token.regular is not None and token.language == "de":
         body.append(_row("Regularity", _styled_regularity(token.regular)))
