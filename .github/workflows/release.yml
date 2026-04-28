@@ -44,16 +44,18 @@ jobs:
         working-directory: extension
         run: npm ci
 
-      # On a tag push, force package.json's version to match the tag (sans
-      # leading `v`). Skipped for manual workflow_dispatch runs so dev
-      # builds keep whatever's checked in.
+      # On a tag push, force package.json AND server/pyproject.toml to
+      # match the tag (sans leading `v`). Skipped for manual
+      # workflow_dispatch runs so dev builds keep whatever's checked in.
       - name: Sync version from tag
         if: startsWith(github.ref, 'refs/tags/')
-        working-directory: extension
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          echo "Setting package.json version to $VERSION"
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          echo "Setting all version fields to $VERSION"
+          (cd extension && npm version "$VERSION" --no-git-tag-version --allow-same-version)
+          # GNU sed on ubuntu-latest. Anchor on the first version = "..." line.
+          sed -i '0,/^version = ".*"$/s//version = "'"$VERSION"'"/' server/pyproject.toml
+          grep -E '^version' server/pyproject.toml
 
       - name: Build .vsix (wheel + bundle + package)
         working-directory: extension
@@ -84,15 +86,12 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           body: |
-            Install with:
+            Download `${{ steps.vsix.outputs.filename }}` from the assets below, then:
 
             ```
             code --install-extension ${{ steps.vsix.outputs.filename }}
             ```
 
-            after downloading the `.vsix` below.
+            **Requirements**: [`uv`](https://docs.astral.sh/uv/) on PATH.
 
-            Requires [`uv`](https://docs.astral.sh/uv/) on PATH. On first run the
-            extension creates a Python virtualenv at `~/.philologist-lsp/venv`
-            and pulls in spaCy, transformers, torch, and friends. Plan for ~3 GB
-            of language-model downloads on first use.
+            **On first activation**, the extension creates a Python virtualenv at `~/.philologist-lsp/venv` and pulls in spaCy, transformers, torch, and friends. Plan for ~3 GB of language-model downloads.
