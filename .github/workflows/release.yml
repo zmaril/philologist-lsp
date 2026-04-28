@@ -44,13 +44,28 @@ jobs:
         working-directory: extension
         run: npm ci
 
+      # On a tag push, force package.json's version to match the tag (sans
+      # leading `v`). Skipped for manual workflow_dispatch runs so dev
+      # builds keep whatever's checked in.
+      - name: Sync version from tag
+        if: startsWith(github.ref, 'refs/tags/')
+        working-directory: extension
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Setting package.json version to $VERSION"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+
       - name: Build .vsix (wheel + bundle + package)
         working-directory: extension
         run: vsce package
 
-      - name: Show packaged file
+      - name: Capture packaged filename
+        id: vsix
         working-directory: extension
-        run: ls -la *.vsix
+        run: |
+          file=$(ls *.vsix | head -n1)
+          echo "Packaged $file"
+          echo "filename=$file" >> "$GITHUB_OUTPUT"
 
       - name: Upload .vsix as workflow artifact
         uses: actions/upload-artifact@v4
@@ -69,10 +84,15 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           body: |
-            Install via `code --install-extension philologist-lsp-${{ github.ref_name }}.vsix`
+            Install with:
+
+            ```
+            code --install-extension ${{ steps.vsix.outputs.filename }}
+            ```
+
             after downloading the `.vsix` below.
 
-            Requires [`uv`](https://docs.astral.sh/uv/) on PATH; on first run the
+            Requires [`uv`](https://docs.astral.sh/uv/) on PATH. On first run the
             extension creates a Python virtualenv at `~/.philologist-lsp/venv`
             and pulls in spaCy, transformers, torch, and friends. Plan for ~3 GB
             of language-model downloads on first use.
