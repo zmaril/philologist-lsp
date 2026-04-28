@@ -14,11 +14,12 @@ import logging
 import os
 import queue
 import threading
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
-import spacy
-from spacy.language import Language
-from spacy.cli.download import download as spacy_download
+if TYPE_CHECKING:
+    # spaCy is part of the optional `[nlp]` extra; defer import so the
+    # module is importable for CI smoke tests without ML deps installed.
+    from spacy.language import Language
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +108,7 @@ class SpacyPool:
         on_ready: ReadyHook | None = None,
     ) -> None:
         self._size = size
-        self._cache: dict[str, Language] = {}
+        self._cache: dict[str, "Language"] = {}
         self._cache_lock = threading.Lock()
         self._inflight: set[str] = set()
         self._inflight_lock = threading.Lock()
@@ -131,7 +132,7 @@ class SpacyPool:
         prefix, _, _suffix = canonical.rpartition("_")
         return f"{prefix}_{self._size}"
 
-    def get(self, iso_code: str) -> Language | None:
+    def get(self, iso_code: str) -> "Language | None":
         """Return the loaded pipeline for `iso_code`, or None if not yet
         ready. Triggers a background download on first miss."""
         with self._cache_lock:
@@ -143,6 +144,8 @@ class SpacyPool:
         model_name = self._model_name(iso_code)
         if model_name is None:
             return None
+
+        import spacy  # noqa: PLC0415 — lazy import; see module top.
 
         # Try a fast in-process load first (model already on disk, just
         # needs to be loaded into memory). If that fails, queue a download.
@@ -190,6 +193,8 @@ class SpacyPool:
         if model_name is None:
             return
         logger.info("downloading spaCy model %s", model_name)
+        import spacy  # noqa: PLC0415
+        from spacy.cli.download import download as spacy_download  # noqa: PLC0415
         if self._on_download_start:
             try:
                 self._on_download_start(

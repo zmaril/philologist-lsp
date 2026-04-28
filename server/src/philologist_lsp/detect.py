@@ -8,8 +8,13 @@ can't decide, the paragraph renders unannotated.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from lingua import LanguageDetector, LanguageDetectorBuilder
+if TYPE_CHECKING:
+    # lingua is part of the optional `[nlp]` extra; importing the module
+    # without it should still succeed (constructor will fail loudly when
+    # actually used).
+    from lingua import LanguageDetector
 
 # Paragraphs shorter than this skip detection entirely — single short
 # words give too little signal for any reliable identification. CJK and
@@ -40,7 +45,9 @@ class LanguageDetectorService:
     """Wraps lingua with paragraph splitting."""
 
     def __init__(self) -> None:
-        self._detector: LanguageDetector = (
+        from lingua import LanguageDetectorBuilder  # noqa: PLC0415
+
+        self._detector: "LanguageDetector" = (
             LanguageDetectorBuilder.from_all_languages()
             .with_preloaded_language_models()
             .build()

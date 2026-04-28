@@ -9,11 +9,16 @@ each one.
 from __future__ import annotations
 
 from dataclasses import dataclass
-
-from spacy.language import Language
-from spacy.tokens import Doc, Token
+from typing import TYPE_CHECKING
 
 from philologist_lsp.verb_regularity import is_irregular
+
+if TYPE_CHECKING:
+    # spaCy is an optional `[nlp]` extra. Type hints stay as strings under
+    # `from __future__ import annotations`, so deferring these imports lets
+    # the module load without the full ML stack installed (useful for CI
+    # import smoke tests).
+    from spacy.tokens import Doc, Token
 
 
 # spaCy lemmas. Wider than just German aux/modal because we want the same
