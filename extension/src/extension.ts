@@ -114,7 +114,6 @@ export async function activate(context: ExtensionContext): Promise<void> {
           minConfidence: config.get("orality.minConfidence", 0.25),
         },
         definitions: { enabled: config.get("definitions.enabled", true) },
-        gutterNumbers: { enabled: config.get("gutterNumbers.enabled", true) },
         respectDisableMarker: config.get("respectDisableMarker", true),
         spacyModelSize: config.get("spacyModelSize", "md"),
       },

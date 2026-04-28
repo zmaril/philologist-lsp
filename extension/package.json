@@ -479,11 +479,6 @@
           "default": true,
           "description": "Generate per-word definitions on hover via the bundled local LLM."
         },
-        "philologist.gutterNumbers.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Number English sentences in the gutter."
-        },
         "philologist.respectDisableMarker": {
           "type": "boolean",
           "default": true,

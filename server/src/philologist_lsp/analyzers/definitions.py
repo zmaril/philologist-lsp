@@ -212,14 +212,14 @@ class DefinitionService:
             "You are a multilingual lexicographer. Give the meaning of each "
             "word in one short English sentence. Do not include the surrounding "
             "context, only the word's meaning.\n\n"
-            'Word: Hund (German)\n'
-            'Definition: A domesticated carnivorous mammal kept as a pet.\n\n'
-            'Word: geben (German)\n'
-            'Definition: To hand over or transfer something to someone.\n\n'
-            'Word: tasse (French)\n'
-            'Definition: A small open container used for drinking liquids.\n\n'
-            f'Word: {lemma} ({lang_name})\n'
-            'Definition:'
+            "Word: Hund (German)\n"
+            "Definition: A domesticated carnivorous mammal kept as a pet.\n\n"
+            "Word: geben (German)\n"
+            "Definition: To hand over or transfer something to someone.\n\n"
+            "Word: tasse (French)\n"
+            "Definition: A small open container used for drinking liquids.\n\n"
+            f"Word: {lemma} ({lang_name})\n"
+            "Definition:"
         )
         messages = [{"role": "user", "content": user_message}]
 

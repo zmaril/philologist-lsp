@@ -14,8 +14,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Pulled lazily by the server when first needed. Keeping them out of the base
-# install lets P0 boot quickly and lets us add ML deps incrementally per phase.
+# Optional extras shipped with the wheel — the marketplace bootstrap
+# installs `philologist-lsp[nlp,llm]` so end users get the ML stack
+# transitively. (Mirrored in [dependency-groups] below for local dev.)
 nlp = [
     "spacy>=3.7.0",
     "lingua-language-detector>=2.0.0",
@@ -24,19 +25,11 @@ nlp = [
     # interpreters and chokes on broken installs like /usr/local/bin/python3).
     "pip>=24.0",
 ]
-orality = [
-    "torch>=2.2.0",
-    "transformers>=4.40.0",
-    "huggingface-hub>=0.23.0",
-]
 llm = [
     "torch>=2.2.0",
     "transformers>=4.40.0",
     "huggingface-hub>=0.23.0",
     "accelerate>=0.33.0",
-]
-all = [
-    "philologist-lsp[nlp,orality,llm]",
 ]
 
 [project.scripts]
@@ -50,7 +43,28 @@ build-backend = "hatchling.build"
 packages = ["src/philologist_lsp"]
 
 [dependency-groups]
+# These mirror [project.optional-dependencies] for local dev. Listing them
+# as dependency-groups + default-groups means a plain `uv sync` installs
+# the ML stack — uv 0.5.x doesn't yet honor a `[tool.uv] default-extras`
+# field, but `default-groups` works in every supported version.
 dev = [
     "pytest>=8.0.0",
     "ruff>=0.4.0",
 ]
+nlp = [
+    "spacy>=3.7.0",
+    "lingua-language-detector>=2.0.0",
+    "pip>=24.0",
+]
+llm = [
+    "torch>=2.2.0",
+    "transformers>=4.40.0",
+    "huggingface-hub>=0.23.0",
+    "accelerate>=0.33.0",
+]
+
+[tool.uv]
+# Plain `uv sync` gives a fully usable dev environment. CI opts out via
+# `uv sync --no-default-groups --group dev` to test that lazy imports work
+# with only the base deps installed.
+default-groups = ["dev", "nlp", "llm"]

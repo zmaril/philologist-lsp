@@ -19,7 +19,9 @@ def is_irregular(language: str, lemma: str) -> bool | None:
     if table is None:
         try:
             data = json.loads(
-                files("philologist_lsp.verb_regularity").joinpath(f"{language}.json").read_text()
+                files("philologist_lsp.verb_regularity")
+                .joinpath(f"{language}.json")
+                .read_text()
             )
         except (FileNotFoundError, ModuleNotFoundError):
             return None

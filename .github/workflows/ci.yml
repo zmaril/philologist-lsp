@@ -33,8 +33,24 @@ jobs:
       - name: Bundle extension
         working-directory: extension
         run: npm run build:bundle
+      # Skip the nlp + llm dependency-groups so the smoke test verifies
+      # the server module still loads with only base deps + the dev tools
+      # (pytest, ruff). `default-groups` are bypassed; `--group dev`
+      # explicitly opts dev back in so pytest is available.
+      - name: Server install (no ML extras)
+        working-directory: server
+        run: uv sync --no-default-groups --group dev
+      - name: Python lint (ruff check)
+        working-directory: server
+        run: uv run ruff check src
+      - name: Python format check (ruff format)
+        working-directory: server
+        run: uv run ruff format --check src
       - name: Server import smoke test
         working-directory: server
-        run: |
-          uv sync
-          uv run python -c "from philologist_lsp import server; print('imports OK')"
+        run: uv run python -c "from philologist_lsp import server; print('imports OK')"
+      - name: Server tests (pytest)
+        working-directory: server
+        # `|| [ $? -eq 5 ]` handles "no tests collected" until there's a
+        # real suite, so the job still passes when tests/ is empty.
+        run: uv run pytest tests/ || [ $? -eq 5 ]

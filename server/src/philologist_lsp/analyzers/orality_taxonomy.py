@@ -109,7 +109,9 @@ MARKER_TAXONOMY: dict[str, tuple[str, str, list[str]]] = {
     "antithesis": (
         ORAL,
         "Sharp opposition between paired ideas.",
-        ["Ask not what your country can do for you, but what you can do for your country."],
+        [
+            "Ask not what your country can do for you, but what you can do for your country."
+        ],
     ),
     "asyndeton": (
         ORAL,
@@ -221,7 +223,6 @@ MARKER_TAXONOMY: dict[str, tuple[str, str, list[str]]] = {
         "Concrete analogy carrying abstract meaning.",
         ["time is money"],
     ),
-
     # ── Literate markers ───────────────────────────────────────────────
     "abstract_noun": (
         LITERATE,

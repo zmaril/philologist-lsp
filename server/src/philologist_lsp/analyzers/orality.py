@@ -38,10 +38,10 @@ class OralityAlternative:
 
 @dataclass(frozen=True, slots=True)
 class OralitySpan:
-    start: int           # absolute char offset in the document
+    start: int  # absolute char offset in the document
     end: int
     marker: str
-    category: str        # "oral" | "literate"
+    category: str  # "oral" | "literate"
     confidence: float
     alternatives: tuple[OralityAlternative, ...]
 
@@ -103,6 +103,7 @@ class HavelockService:
         import torch  # noqa: PLC0415
         import torch.nn as nn  # noqa: PLC0415
         from huggingface_hub import hf_hub_download  # noqa: PLC0415
+
         # transformers 5.x dropped BertModel/BertTokenizer from the top
         # level. Use Auto* — for bert-base-uncased they resolve to the same
         # underlying classes, and the state-dict keys still match.
@@ -142,9 +143,7 @@ class HavelockService:
                     self.classifier = nn.Linear(768, num_classes)
 
                 def forward(self, input_ids, attention_mask):
-                    out = self.bert(
-                        input_ids=input_ids, attention_mask=attention_mask
-                    )
+                    out = self.bert(input_ids=input_ids, attention_mask=attention_mask)
                     return self.classifier(self.dropout(out.pooler_output))
 
             class _BertRegressor(nn.Module):
@@ -162,9 +161,7 @@ class HavelockService:
                     self.sigmoid = nn.Sigmoid()
 
                 def forward(self, input_ids, attention_mask):
-                    out = self.bert(
-                        input_ids=input_ids, attention_mask=attention_mask
-                    )
+                    out = self.bert(input_ids=input_ids, attention_mask=attention_mask)
                     pooled = self.dropout(out.pooler_output)
                     return self.sigmoid(self.regressor(pooled)).squeeze(-1)
 
@@ -207,9 +204,7 @@ class HavelockService:
         finally:
             if self._on_load_end:
                 try:
-                    self._on_load_end(
-                        self._model_repo, f"Loaded {self._model_repo}"
-                    )
+                    self._on_load_end(self._model_repo, f"Loaded {self._model_repo}")
                 except Exception:  # noqa: BLE001
                     logger.exception("on_load_end hook failed")
 
@@ -284,9 +279,7 @@ class HavelockService:
                 padding=False,
             ).to(self._device)
             with torch.no_grad():
-                score = self._regressor(
-                    inputs["input_ids"], inputs["attention_mask"]
-                )
+                score = self._regressor(inputs["input_ids"], inputs["attention_mask"])
             value = float(score.item())
         except Exception:  # noqa: BLE001
             logger.exception("regressor failed")

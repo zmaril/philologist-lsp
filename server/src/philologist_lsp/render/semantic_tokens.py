@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from lsprotocol import types as lsp
-
 from philologist_lsp.analyzers.morph import DocumentAnalysis, TokenAnalysis
 from philologist_lsp.colors import (
     GENDER_TYPE,
@@ -88,7 +86,9 @@ def encode(analysis: DocumentAnalysis) -> list[int]:
         if length <= 0:
             continue
         delta_line = position.line - prev_line
-        delta_start = position.character - prev_char if delta_line == 0 else position.character
+        delta_start = (
+            position.character - prev_char if delta_line == 0 else position.character
+        )
         out.extend(
             [
                 delta_line,
